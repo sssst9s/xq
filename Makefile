@@ -1,22 +1,4 @@
 # SPDX-License-Identifier: Apache-2.0
-#
-# Portable hand-written Makefile. No cmake, no meson, no configure: the
-# library has zero dependencies, so a generator would only add a build-time
-# dependency to a project whose selling point is not having any.
-#
-#   make              build the static library and the tests
-#   make test         build and run the test suite
-#   make ubsan        rebuild under UBSan and run the tests
-#   make asan         rebuild under ASan + UBSan and run the tests
-#   make sanitize     both of the above
-#   make fuzz         build the libFuzzer targets (clang only)
-#   make WITH_ZSTD=1  additionally build the optional zstd codec
-#
-# KNOWN ISSUE: on macOS 26 (Darwin 25.x) with Apple clang 17, the AddressSanitizer
-# runtime hangs inside __asan::AsanInitFromRtl() during dyld startup -- before
-# main() runs -- for every binary, including `int main(void){return 0;}`. It is
-# not specific to this project. `make ubsan` works and is what to run locally on
-# such a host; ASan coverage comes from CI on Linux.
 
 CC      ?= cc
 AR      ?= ar
@@ -32,18 +14,9 @@ LDLIBS  += -lpthread
 DEPFLAGS = -MMD -MP
 CPPFLAGS += -Iinclude -Isrc/common -Isrc/format -Isrc/codec -Isrc/core -Isrc/platform
 
-# Where Homebrew puts zstd on macOS; harmless elsewhere.
 ZSTD_CPPFLAGS ?= $(if $(wildcard /opt/homebrew/include/zstd.h),-I/opt/homebrew/include,)
 ZSTD_LDFLAGS  ?= $(if $(wildcard /opt/homebrew/lib/libzstd.a),-L/opt/homebrew/lib,)
 
-# The optional zstd codec. Off by default: the shipping codecs have no
-# dependencies. Used as a known-good strong codec to develop the container
-# and the dictionary against, and as an honest ceiling for benchmarks.
-#
-# A configuration-specific build directory is not optional here. make tracks
-# file timestamps, not the flags a file was built with, so without it,
-# switching WITH_ZSTD on or off leaves incompatible objects in place and the
-# link fails -- or worse, succeeds against a mixed build.
 LIB_EXTRA =
 ifdef WITH_ZSTD
 CPPFLAGS += -DXQ_WITH_ZSTD $(ZSTD_CPPFLAGS)
@@ -96,7 +69,6 @@ $(BUILD)/%.o: %.c
 	@mkdir -p $(dir $@)
 	$(CC) $(CPPFLAGS) $(CFLAGS) $(DEPFLAGS) -c $< -o $@
 
-# Rebuild when a header changes, not just when the .c does.
 -include $(LIB_OBJ:.o=.d)
 
 $(BUILD)/%: tests/%.c $(LIB)
@@ -116,8 +88,6 @@ bench: $(BENCH_BIN)
 test: $(TEST_BIN)
 	@for t in $(TEST_BIN); do echo "--- $$t"; $$t || exit 1; done
 
-# Everything that can run on any host, in one command. This is what CI runs
-# and what a contributor should run before sending a patch.
 check:
 	@echo "=== unit + malformed-input tests ==="
 	@$(MAKE) --no-print-directory test
@@ -130,13 +100,6 @@ check:
 	@echo
 	@echo "all checks passed"
 
-# Sanitisers are not optional for a format parser. -fno-sanitize-recover makes
-# the first undefined operation a hard failure rather than a log line, so a
-# passing run is a real signal rather than something to grep.
-#
-# Signed/unsigned overflow are included deliberately: this code does arithmetic
-# on lengths and offsets taken from untrusted input, which is exactly where
-# wraparound bugs turn into overreads.
 UBSAN_FLAGS = -fsanitize=undefined,integer-divide-by-zero,unsigned-integer-overflow \
               -fno-sanitize-recover=all -fno-omit-frame-pointer
 
@@ -149,9 +112,6 @@ asan:
 
 sanitize: ubsan asan
 
-# Prefer coverage-guided libFuzzer where its runtime exists. Apple's clang does
-# not ship one, so fall back to the standalone driver in tests/fuzz/fuzz_driver.c
-# -- otherwise the harnesses would silently become unbuildable on macOS and rot.
 FUZZ_HARNESS = $(filter-out tests/fuzz/fuzz_driver.c,$(wildcard tests/fuzz/fuzz_*.c))
 HAVE_LIBFUZZER := $(shell printf 'int LLVMFuzzerTestOneInput(const unsigned char*e,unsigned long s){(void)e;(void)s;return 0;}' > /tmp/.xqfz.c 2>/dev/null && $(CC) -fsanitize=fuzzer /tmp/.xqfz.c -o /tmp/.xqfz.bin >/dev/null 2>&1 && echo yes || echo no)
 
@@ -176,7 +136,6 @@ else
 	done
 endif
 
-# Short deterministic run, suitable for CI on any host.
 fuzz-run: fuzz
 	@for b in $(BUILD)/fuzz/*; do \
 	    [ -f "$$b" ] && [ -x "$$b" ] || continue; \
