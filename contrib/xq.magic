@@ -1,0 +1,25 @@
+# file(1) magic for the xq compression format.
+#
+# Install:
+#   cat contrib/xq.magic >> ~/.magic && file -C -m ~/.magic
+# or on systems with a magic directory:
+#   sudo cp contrib/xq.magic /etc/magic.d/xq
+#
+# Layout is documented in docs/format-spec.md.
+
+0	string	\211XQ1\r\n\032\n	xq compressed data
+!:mime	application/x-xq
+!:ext	xq
+>8	byte	x	\b, format %d
+>9	byte	x	\b.%d
+>16	byte	0	\b, stored
+>16	byte	1	\b, lzb
+>16	byte	2	\b, lze
+>16	byte	3	\b, zstd
+>18	byte	0	\b, no checksum
+>18	byte	1	\b, crc32c
+>18	byte	2	\b, xxh64
+>19	byte	>0	\b, 2^%d byte blocks
+>12	lelong&0x2	0x2	\b, dictionary
+>12	lelong&0x8	0x8	\b, streamed
+>20	lequad	!0xffffffffffffffff	\b, %lld bytes uncompressed
