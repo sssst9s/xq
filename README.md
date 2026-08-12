@@ -1,5 +1,11 @@
 # xq
 
+> **Note: this is a re-upload.** The original repository was lost along with
+> the account that hosted it. This is the same project, re-published from a
+> local copy on a new account, and it is the canonical home going forward.
+> The commit history starts fresh here; nothing of the code or documentation
+> is missing.
+
 A seekable, block-parallel compression library and file format, written in C
 with no dependencies.
 
