@@ -56,10 +56,12 @@ endif
 LIB_SRC = src/common/xq_common.c \
           src/common/xq_crc32c.c \
           src/common/xq_xxh64.c \
+          src/common/xq_huff.c \
           src/format/xq_format.c \
           src/codec/xq_codec.c \
           src/codec/xq_codec_stored.c \
           src/codec/xq_codec_lzb.c \
+          src/codec/xq_codec_lze.c \
           src/platform/xq_file.c \
           src/platform/xq_thread.c \
           src/core/xq_encoder.c \

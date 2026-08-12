@@ -3,7 +3,7 @@
 A seekable, block-parallel compression library and file format, written in C
 with no dependencies.
 
-**Status: early development.** Milestone 9 of 10. The container is complete and
+**Status: early development.** All ten milestones complete. The container is complete and
 works end to end, and the default build compresses with no dependencies.
 Nothing here is stable, and no performance claim is made that is not backed by
 a script in `benchmarks/`.
@@ -33,19 +33,24 @@ compress far better than their size alone would allow.
 
 ### Measured
 
-64 MiB source tree, 64 KiB blocks, own `lzb` codec, single threaded:
+256 MiB source tree, own `lze` codec, no third-party code:
 
-| config | ratio |
-|---|---|
-| 64 KiB blocks, no dictionary | 5.194x |
-| **64 KiB blocks + 8 MiB dictionary** | **6.661x (+28.2%)** |
-| 1 MiB blocks, no dictionary | 5.972x |
-| 8 MiB blocks, no dictionary | 6.552x |
+| config | ratio | seek p50 |
+|---|---|---|
+| 64 KiB blocks, no dictionary | 5.307x | 131 us |
+| **64 KiB blocks + 8 MiB dictionary** | **6.367x** | **141 us** |
+| 1 MiB blocks, no dictionary | 6.372x | 1807 us |
+| 8 MiB blocks, no dictionary | 6.748x | 14450 us |
 
-Small blocks with a dictionary beat blocks 128 times larger without one, which
-is the entire thesis of the format.
+Read the second row against the third. **The same compression ratio, to within
+0.1%, at 12.8x lower seek latency.** That is the whole point of the format, and
+it is measured with the shipping codec rather than a stand-in.
 
-The same measurement on a 256 MiB tree with the optional reference codec:
+A feasibility spike run before any of this was built predicted a +17.4%
+dictionary gain and a 9.2x latency advantage. The finished implementation
+delivers +20.0% and 12.8x.
+
+The same measurement with the optional reference codec:
 
 | config | ratio | seek p50 |
 |---|---|---|
@@ -96,6 +101,8 @@ Requires a C11 compiler. No dependencies.
 make            # static library, CLI and tests
 make check      # tests, UBSan and fuzzing
 ```
+
+Full details in [INSTALL.md](INSTALL.md).
 
 ## Using it
 
@@ -153,12 +160,13 @@ searched in place.
 | 7 | Threading, parallel encode and decode | done |
 | 8 | `repair`, richer `info`, stream checksum verification | done |
 | 9 | `LZB` codec with lazy matching | done |
-| 10 | `LZE` entropy stage | next |
+| 10 | `LZE` entropy stage | done |
 
-`lzb` is the default codec and needs no dependencies. It reaches 6.7x where
-the optional reference codec reaches 9.5x on the same data, and decompresses
-at a comparable speed. That ratio gap is what milestone 10 addresses: `lzb`
-has no entropy coder, so every literal costs a full eight bits.
+`lze` is the default codec and needs no dependencies: LZ77 with lazy matching
+and a Huffman entropy stage. It reaches 7.4x where the optional reference codec
+reaches 9.5x on the same data. Closing the remaining gap means coding literals,
+lengths and offsets as separate streams rather than one, which is the obvious
+next step and needs no format change.
 
 ## Layout
 
@@ -190,6 +198,7 @@ anything in `src/`.
 - [docs/design/00-proposal.md](docs/design/00-proposal.md) goals and alternatives
 - [docs/design/01-m0-spike-results.md](docs/design/01-m0-spike-results.md) the
   measurements that decided the architecture
+- [INSTALL.md](INSTALL.md) building, installing and platform notes
 - [USAGE.md](USAGE.md) every command and option, with the reasoning
 - [CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.md](SECURITY.md)
 

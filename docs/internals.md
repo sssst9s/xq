@@ -403,3 +403,41 @@ fuzzes the decoder directly, with and without a dictionary.
 decompressing at comparable speed but compressing about three times slower.
 The ratio gap is almost entirely the missing entropy stage: every literal
 currently costs eight bits and every offset a whole number of bytes.
+
+---
+
+## 12. The lze entropy stage
+
+`lze` runs the `lzb` parser and then Huffman-codes its output. Canonical codes,
+lengths capped at 15 bits, tables stored as 256 four-bit lengths in 128 bytes.
+
+**One order-0 model over the whole LZB stream, not three.** The stream mixes
+literals, which are highly skewed, with offsets, which are close to uniform, so
+a single model is diluted. Splitting into separate literal, token and offset
+streams would code each with its own distribution and is the obvious next
+improvement. It needs no format change, because `codec_id` distinguishes them.
+The simple version was built first because it is obviously correct, and it
+already recovers +11.4%.
+
+**A raw fallback is required, not optional.** On dense or already-compressed
+data the table plus a near-flat distribution costs more than it saves, so the
+encoder compares and emits mode 0 with the plain LZB stream when Huffman does
+not win. Without that, `lze` would be worse than `lzb` on incompressible input.
+
+**Table validation is strict.** `xq_huff_load` rejects a length set that is not
+an exactly-filled prefix code, and requires the single-symbol case to use a
+one-bit code. Over-subscribed lengths would let crafted input produce
+overlapping codes; incomplete ones are merely wasteful, but no conforming
+encoder emits them, and this codebase rejects what a conforming encoder would
+not produce.
+
+**Length limiting is by frequency smoothing.** When Huffman produces a code
+longer than 15 bits the frequencies are halved and the tree rebuilt, which
+converges because halving flattens the distribution. Package-merge would be
+optimal; smoothing costs a little ratio only on pathologically skewed blocks
+and is a fraction of the code.
+
+Codes are emitted least-significant-bit first, so the canonical
+most-significant-bit-first code is reversed before being written. The decode
+table is flat: `1 << max_len` entries, every slot whose low bits match a code
+filled with that symbol, so decoding is one indexed lookup rather than a walk.

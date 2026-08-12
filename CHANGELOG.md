@@ -6,7 +6,7 @@ until then the API and the on-disk format may change without notice.
 
 ## [Unreleased]
 
-Pre-1.0 development. Milestones 0 through 9 of 10 are complete. The container
+Pre-1.0 development. All ten milestones are complete. The container
 works end to end; the dependency-free codec does not exist yet, so real
 compression currently requires `make WITH_ZSTD=1`.
 
@@ -41,8 +41,10 @@ compression currently requires `make WITH_ZSTD=1`.
   faults that per-block checksums cannot see.
 - `file(1)` magic entry in `contrib/xq.magic`, and USAGE.md.
 - `lzb`, a dependency-free LZ77 codec with lazy matching, varint offsets and a
-  shared dictionary match index. Now the default codec, so the default build
-  compresses without any third-party code.
+  shared dictionary match index.
+- `lze`, `lzb` plus a canonical Huffman entropy stage, now the default codec.
+  The default build compresses without any third-party code.
+- INSTALL.md.
 
 ### Measured
 
@@ -87,4 +89,4 @@ Container overhead is 0.067% at the default 64 KiB block size.
 | 7 | Threading, parallel encode and decode | done |
 | 8 | `repair`, richer `info`, `file(1)` magic | done |
 | 9 | `LZB` codec with lazy matching | done |
-| 10 | `LZE` entropy stage; re-run the M0 spike against it | next |
+| 10 | `LZE` entropy stage; re-run the M0 spike against it | done |

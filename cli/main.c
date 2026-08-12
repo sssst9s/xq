@@ -30,7 +30,7 @@ static int usage(FILE *fp, int code)
 "  -o PATH     output file ('-' for stdout, the default)\n"
 "  -b SIZE     block size, power of two, 4K..256M (default 64K)\n"
 "  -l N        compression level 1..12 (default 6)\n"
-"  -c NAME     codec: stored, lzb, zstd (default lzb)\n"
+"  -c NAME     codec: stored, lzb, lze, zstd (default lze)\n"
 "  -D SIZE     shared dictionary size, 0 disables (default 8M)\n"
 "  -T N        worker threads, 1 disables, 0 auto (default 0)\n"
 "  -C NAME     block checksum: none, crc32c, xxh64 (default crc32c)\n"
@@ -105,6 +105,7 @@ static int cmd_compress(int argc, char **argv)
             const char *c = argv[++i];
             if (!strcmp(c, "stored")) p.codec = XQ_CODEC_STORED;
             else if (!strcmp(c, "lzb")) p.codec = XQ_CODEC_LZB;
+            else if (!strcmp(c, "lze")) p.codec = XQ_CODEC_LZE;
             else if (!strcmp(c, "zstd")) p.codec = XQ_CODEC_ZSTD;
             else { fprintf(stderr, PROG ": unknown codec '%s'\n", c); return 2; }
             if (!xq_codec_available(p.codec)) {

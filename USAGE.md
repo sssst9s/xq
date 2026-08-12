@@ -19,9 +19,11 @@ where it affects what you should pick.
 ```sh
 git clone https://github.com/sssst9s/xq
 cd xq
-make                    # static library, CLI and tests
+make
 ./build/xq --help
 ```
+
+See [INSTALL.md](INSTALL.md) for build options and platform notes.
 
 The default build compresses with `lzb` and needs nothing else. An optional
 reference codec can be built in for comparison:
@@ -37,7 +39,8 @@ Copy `build/xq` onto your PATH; there is no install target yet.
 
 | codec | dependencies | ratio | notes |
 |---|---|---|---|
-| `lzb` | none | 6.7x | the default; LZ77 with lazy matching |
+| `lze` | none | 7.4x | the default; LZ77 with lazy matching plus Huffman |
+| `lzb` | none | 6.7x | `lze` without the entropy stage; decodes faster |
 | `stored` | none | 1.0x | no compression; framing and checksums only |
 | `zstd` | libzstd | 9.5x | optional, build-time, for comparison |
 
@@ -156,7 +159,7 @@ what you want for a disk image or a database file.
 | `-o PATH` | most | output file; `-` means stdout (the default) |
 | `-b SIZE` | compress | block size, power of two, 4K to 256M (default 64K) |
 | `-l N` | compress | compression level 1 to 12 (default 6) |
-| `-c NAME` | compress | codec: `lzb`, `stored`, `zstd` (default `lzb`) |
+| `-c NAME` | compress | codec: `lze`, `lzb`, `stored`, `zstd` (default `lze`) |
 | `-D SIZE` | compress | shared dictionary size, `0` disables (default 8M) |
 | `-T N` | compress | worker threads, `1` disables, `0` auto (default 0) |
 | `-C NAME` | compress | block checksum: `none`, `crc32c`, `xxh64` (default `crc32c`) |
@@ -202,9 +205,9 @@ xq compress -D 8M -o out.xq file    # explicit
 xq compress -D 0  -o out.xq file    # disabled
 ```
 
-Measured on a source tree at 64 KiB blocks: **+28.2%** ratio with the default
-`lzb` codec, enough that 64 KiB blocks beat blocks 128 times larger that have
-no dictionary.
+Measured on a 256 MiB source tree at 64 KiB blocks: **+20.0%** ratio, enough
+that 64 KiB blocks match the ratio of 1 MiB blocks while seeking 12.8x
+faster.
 
 Three things to know:
 

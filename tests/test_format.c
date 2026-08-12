@@ -459,7 +459,9 @@ static void test_params(void)
     p = xq_params_default(); p.codec = XQ_CODEC_LZB;
     CHECK_ST(xq_params_check(&p, &why), XQ_OK);
     p = xq_params_default(); p.codec = XQ_CODEC_LZE;
-    CHECK_ST(xq_params_check(&p, &why), XQ_ERR_UNSUPPORTED_CODEC);
+    CHECK_ST(xq_params_check(&p, &why), XQ_OK);
+    p = xq_params_default(); p.codec = (xq_codec)7;
+    CHECK_ST(xq_params_check(&p, &why), XQ_ERR_PARAM);
     CHECK(xq_codec_available(XQ_CODEC_LZB), "lzb is built in");
     CHECK(xq_codec_available(XQ_CODEC_STORED), "stored is always available");
 

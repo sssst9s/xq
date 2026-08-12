@@ -3,6 +3,7 @@
 
 extern const xq_codec_vt xq_codec_stored_vt;
 extern const xq_codec_vt xq_codec_lzb_vt;
+extern const xq_codec_vt xq_codec_lze_vt;
 #ifdef XQ_WITH_ZSTD
 extern const xq_codec_vt xq_codec_zstd_vt;
 #endif
@@ -10,6 +11,7 @@ extern const xq_codec_vt xq_codec_zstd_vt;
 static const xq_codec_vt *const codecs[] = {
     &xq_codec_stored_vt,
     &xq_codec_lzb_vt,
+    &xq_codec_lze_vt,
 #ifdef XQ_WITH_ZSTD
     &xq_codec_zstd_vt,
 #endif

@@ -207,9 +207,23 @@ makes the encoder usable, and the vtable now makes "digest once" the only way
 to pass one. Finding 3 held too - the encoder samples when the input is
 seekable and falls back to a prefix on a pipe.
 
-Finding 5 remains the open risk. Everything above uses zstd, which has an
-entropy coder at every level. Whether our own LZB/LZE reproduces it is what
-M9 and M10 exist to answer, and this spike gets re-run against them.
+**Finding 5 is resolved (M10, 2026-08-12).** The spike has been re-run against
+the shipping `lze` codec, which owes nothing to the reference implementation:
+
+| quantity | predicted | reference codec | our codec |
+|---|---|---|---|
+| dictionary gain at 64 KiB blocks | +17.4% | +17.2% | **+20.0%** |
+| seek advantage at matched ratio | 9.2x | 10.2x | **12.8x** |
+
+At 64 KiB blocks with an 8 MiB dictionary, `lze` reaches 6.367x against 6.372x
+for 1 MiB blocks with no dictionary, a difference of 0.1%, while seeking 12.8x
+faster. The gain is larger than the reference codec's because a weaker
+baseline leaves more for the dictionary to recover.
+
+The warning in this finding shaped the codec: `lzb` does lazy matching rather
+than greedy precisely because the table above showed greedy gaining +0.1%.
+Had the original plan been followed, the format's central feature would have
+been invisible in its own implementation.
 
 ## Threats to validity
 

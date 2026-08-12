@@ -46,6 +46,7 @@ int xq_codec_available(xq_codec c)
     switch (c) {
     case XQ_CODEC_STORED: return 1;
     case XQ_CODEC_LZB:    return 1;
+    case XQ_CODEC_LZE:    return 1;
 #ifdef XQ_WITH_ZSTD
     case XQ_CODEC_ZSTD:   return 1;
 #endif
@@ -60,7 +61,7 @@ xq_params xq_params_default(void)
 
     p.block_size = XQ_BLOCK_SIZE_DEFAULT;
     p.dict_size  = XQ_DICT_SIZE_DEFAULT;
-    p.codec      = XQ_CODEC_LZB;
+    p.codec      = XQ_CODEC_LZE;
     p.checksum   = XQ_CHECKSUM_CRC32C;
     p.threads    = 0;
     p.mem_limit  = 0;
